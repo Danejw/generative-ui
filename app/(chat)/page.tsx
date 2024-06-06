@@ -1,6 +1,6 @@
 // pages/index.js
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { nanoid } from '@/lib/utils';
 import { Chat } from '@/components/chat';
@@ -13,7 +13,7 @@ export const metadata = {
   title: 'Next.js AI Chatbot'
 }
 
-export default function IndexPage({ isAuthenticated }) {
+export default function IndexPage({ isAuthenticated }: { isAuthenticated: boolean }) {
   const router = useRouter();
 
   if (!isAuthenticated) {
@@ -21,9 +21,18 @@ export default function IndexPage({ isAuthenticated }) {
     return null; // Return null to prevent rendering the chatbot component
   }
 
-  const id = nanoid();
-  const session = auth() as Session;
-  const missingKeys = getMissingKeys();
+  const [id] = useState(nanoid());
+  const [session] = useState(auth() as Session);
+  const [missingKeys, setMissingKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchMissingKeys = async () => {
+      const keys = await getMissingKeys();
+      setMissingKeys(keys);
+    };
+
+    fetchMissingKeys();
+  }, []);
 
   return (
     <AI initialAIState={{ chatId: id, messages: [] }}>
