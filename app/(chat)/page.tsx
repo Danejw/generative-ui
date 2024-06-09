@@ -1,7 +1,8 @@
 // pages/index.js
+'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { nanoid } from '@/lib/utils';
 import { Chat } from '@/components/chat';
 import { AI } from '@/lib/chat/actions';
@@ -22,9 +23,24 @@ export default function IndexPage({ isAuthenticated }: { isAuthenticated: boolea
   }
 
   const [id] = useState(nanoid());
-  const [session] = useState(auth() as Session);
+  const [session, setSession] = useState<Session | null>(null);
   const [missingKeys, setMissingKeys] = useState<string[]>([]);
 
+  useEffect(() => {
+    const fetchSession = async () => {
+      const sessionData = await auth();
+      if (sessionData && sessionData.user) {
+        setSession({
+          user: {
+            id: sessionData.user.id || '',
+            email: sessionData.user.email || ''
+          }
+        });
+      }
+    };
+
+    fetchSession();
+  }, []);
   useEffect(() => {
     const fetchMissingKeys = async () => {
       const keys = await getMissingKeys();
@@ -36,7 +52,7 @@ export default function IndexPage({ isAuthenticated }: { isAuthenticated: boolea
 
   return (
     <AI initialAIState={{ chatId: id, messages: [] }}>
-      <Chat id={id} session={session} missingKeys={missingKeys} />
+      <Chat id={id} session={session || undefined} missingKeys={missingKeys} />
     </AI>
   );
 }
